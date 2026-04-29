@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FocusLab — Analítica</title>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Space+Mono:wght@400;700&family=Syne:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    :root {
+      /* Paleta de FocusLab */
+      --bg:          #080c10;
+      --surface:     #0e1318;
+      --surface-2:   #141c24;
+      --surface-3:   #1c2835;
+      --border:      rgba(255,255,255,0.06);
+      --border-mid:  rgba(255,255,255,0.12);
+      
+      --accent:      #00e5a0; /* Verde neón */
+      --accent-blue: #00b4d8; /* Cian/Azul */
+      --accent-red:  #ff4d6d;
+      --accent-warn: #ffb830;
+      --accent-purple:#9d4edd;
+      
+      --text-1:      #e8eef4;
+      --text-2:      #7a93a8;
+      --text-3:      #3d5366;
+      
+      --sidebar-w:   250px;
+      --transition:  0.22s cubic-bezier(0.4, 0, 0.2, 1);
+      --radius:      14px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Instrument Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text-1);
+      min-height: 100vh;
+      display: flex;
+    }
+
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 3px; }
+
+    /* ─── SIDEBAR ─── */
+    .sidebar { width: var(--sidebar-w); background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; }
+    .sidebar-brand { padding: 28px 24px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+    .logo-mark { width: 32px; height: 32px; background: var(--surface-3); border: 1px solid var(--border-mid); border-radius: 8px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 12px rgba(0,229,160,0.12); }
+    .logo-mark svg { width: 16px; height: 16px; color: var(--accent); }
+    .brand-text .logo { font-family: 'Syne', sans-serif; font-size: 1.2rem; font-weight: 800; letter-spacing: -0.02em; color: var(--text-1); line-height: 1; }
+    .brand-text .logo em { font-style: normal; color: var(--accent); }
+    .brand-text .tagline { font-size: 0.65rem; color: var(--text-3); font-family: 'Space Mono', monospace; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+    
+    .nav-section { flex: 1; padding: 20px 0; overflow-y: auto; }
+    .nav-section-label { display: block; font-size: 0.65rem; font-family: 'Space Mono', monospace; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.1em; padding: 0 24px 10px; }
+    .nav-item { list-style: none; margin-bottom: 4px; }
+    .nav-link { display: flex; align-items: center; gap: 12px; padding: 10px 24px; color: var(--text-2); text-decoration: none; font-size: 0.88rem; font-weight: 500; border-left: 2px solid transparent; transition: all var(--transition); }
+    .nav-link:hover { color: var(--text-1); background: var(--surface-2); }
+    .nav-link.active { color: var(--accent); border-left-color: var(--accent); background: linear-gradient(90deg, rgba(0,229,160,0.08), transparent); }
+    .nav-link i { width: 18px; text-align: center; font-size: 0.9rem; }
+    
+    .sidebar-footer { padding: 16px 20px; border-top: 1px solid var(--border); background: var(--surface); }
+    .sidebar-user { display: flex; align-items: center; justify-content: space-between; padding: 8px; border-radius: 10px; transition: background var(--transition); }
+    .sidebar-user:hover { background: var(--surface-2); }
+    .user-info-wrap { display: flex; align-items: center; gap: 10px; }
+    .avatar { width: 34px; height: 34px; border-radius: 10px; background: linear-gradient(135deg, var(--surface-3), var(--surface-2)); border: 1px solid var(--border-mid); display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 600; color: var(--accent); font-family: 'Syne', sans-serif; }
+    .user-info .name { font-size: 0.82rem; font-weight: 600; color: var(--text-1); }
+    .user-info .role { font-size: 0.65rem; color: var(--accent-blue); font-family: 'Space Mono', monospace; }
+    .btn-logout { background: none; border: none; color: var(--text-3); cursor: pointer; padding: 6px; border-radius: 6px; transition: all var(--transition); }
+    .btn-logout:hover { color: var(--accent-red); background: rgba(255,77,109,0.1); }
+
+    /* ─── MAIN & TOPBAR ─── */
+    .main { margin-left: var(--sidebar-w); flex: 1; min-height: 100vh; display: flex; flex-direction: column; position: relative; }
+    .main::before { content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: radial-gradient(ellipse 60% 40% at 50% 0%, rgba(0,180,216,0.03) 0%, transparent 70%); }
+    
+    .topbar { background: rgba(14, 19, 24, 0.8); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 16px 36px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
+    .topbar-title { font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 700; color: var(--text-1); }
+    .topbar-date { font-size: 0.72rem; color: var(--text-2); font-family: 'Space Mono', monospace; margin-top: 4px; }
+    
+    .content { padding: 32px 36px; flex: 1; display: flex; flex-direction: column; gap: 24px; }
+
+    /* ─── HEADER DE SECCIÓN ─── */
+    .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .section-title { font-family: 'Syne', sans-serif; font-size: 1.5rem; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+
+    /* ─── GRID DE GRÁFICOS ─── */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 24px;
+    }
+
+    .chart-card {
+      background: var(--surface-2); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 24px;
+      animation: fadeUp 0.4s ease both;
+      display: flex; flex-direction: column;
+    }
+    
+    .chart-card:nth-child(2) { animation-delay: 0.1s; }
+    .chart-card:nth-child(3) { animation-delay: 0.2s; }
+    .chart-card:nth-child(4) { animation-delay: 0.3s; }
+
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+    .chart-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+    .chart-title { font-family: 'Syne', sans-serif; font-size: 1.05rem; font-weight: 600; color: var(--text-1); }
+    .chart-subtitle { font-size: 0.75rem; color: var(--text-3); margin-top: 4px; font-family: 'Space Mono', monospace; }
+    
+    .chart-container { position: relative; width: 100%; flex: 1; min-height: 250px; }
+    
+    /* ─── TARJETAS DE MÉTRICAS RÁPIDAS (DENTRO DEL COL-3) ─── */
+    .kpi-card {
+      background: var(--surface-3); border: 1px solid var(--border-mid);
+      border-radius: 12px; padding: 20px; text-align: center;
+      display: flex; flex-direction: column; justify-content: center; align-items: center;
+      height: 100%; min-height: 160px;
+    }
+    
+    .kpi-label { font-size: 0.75rem; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.1em; font-family: 'Space Mono', monospace; margin-bottom: 12px; }
+    .kpi-value { font-family: 'Syne', sans-serif; font-size: 3rem; font-weight: 800; line-height: 1; }
+    .kpi-value.danger { color: var(--accent-red); text-shadow: 0 0 20px rgba(255,77,109,0.3); }
+    .kpi-value.success { color: var(--accent); text-shadow: 0 0 20px rgba(0,229,160,0.3); }
+
+    /* Layout para la segunda fila */
+    .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+
+  </style>
+</head>
+
+<body>
+
+<script>
+  if (!localStorage.getItem("focus_session")) {
+    window.location.href = "login.html";
+  }
+</script>
+
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="logo-mark">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="9"/>
+        <polyline points="12 7 12 12 15 14"/>
+      </svg>
+    </div>
+    <div class="brand-text">
+      <div class="logo">Focus<em>Lab</em></div>
+      <div class="tagline">workspace</div>
+    </div>
+  </div>
+
+  <div class="nav-section">
+    <span class="nav-section-label">Menú Principal</span>
+    <ul style="padding:0;">
+      <li class="nav-item">
+        <a class="nav-link" href="index.html">
+          <i class="fas fa-home"></i> Inicio
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="tables.html">
+          <i class="fas fa-tasks"></i> Tareas
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link active" href="charts.html">
+          <i class="fas fa-chart-line"></i> Analítica
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="focus.html">
+          <i class="fas fa-bullseye"></i> Modo Focus
+        </a>
+      </li>
+    </ul>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="sidebar-user">
+      <div class="user-info-wrap">
+        <div class="avatar" id="avatar-initials">--</div>
+        <div class="user-info">
+          <div class="name" id="username">Cargando…</div>
+          <div class="role">Pro · Activo</div>
+        </div>
+      </div>
+      <button class="btn-logout" onclick="logout()" title="Cerrar sesión">
+        <i class="fas fa-sign-out-alt"></i>
+      </button>
+    </div>
+  </div>
+</aside>
+
+<div class="main">
+
+  <nav class="topbar">
+    <div>
+      <div class="topbar-title">Analítica de Rendimiento</div>
+      <div class="topbar-date" id="current-date"></div>
+    </div>
+  </nav>
+
+  <div class="content">
+
+    <div class="section-header">
+      <div class="section-title">
+        <i class="fas fa-chart-pie" style="color: var(--accent-purple);"></i> Métricas de la Semana
+      </div>
+    </div>
+
+    <div class="dashboard-grid">
+      
+      <div class="chart-card">
+        <div class="chart-header">
+          <div>
+            <div class="chart-title">Tendencia de Productividad</div>
+            <div class="chart-subtitle">Tareas completadas por día</div>
+          </div>
+          <i class="fas fa-arrow-trend-up" style="color: var(--accent-blue); font-size: 1.2rem;"></i>
+        </div>
+        <div class="chart-container">
+          <canvas id="chartProductividad"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-card" style="padding: 0; background: transparent; border: none;">
+        <div style="display: flex; flex-direction: column; gap: 24px; height: 100%;">
+            
+            <div class="kpi-card">
+                <div class="kpi-label">Índice de Procrastinación</div>
+                <div class="kpi-value danger">68%</div>
+                <div style="font-size: 0.75rem; color: var(--text-3); margin-top: 8px;">↓ -5% vs semana pasada</div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-label">Horas en Deep Work</div>
+                <div class="kpi-value success">14h</div>
+                <div style="font-size: 0.75rem; color: var(--text-3); margin-top: 8px;">↑ +2h vs semana pasada</div>
+            </div>
+
+        </div>
+      </div>
+
+    </div>
+
+    <div class="row-2">
+      
+      <div class="chart-card">
+        <div class="chart-header">
+          <div>
+            <div class="chart-title">Enfoque vs Distracción</div>
+            <div class="chart-subtitle">Comparativa de horas invertidas</div>
+          </div>
+          <i class="fas fa-scale-balanced" style="color: var(--accent-warn); font-size: 1.2rem;"></i>
+        </div>
+        <div class="chart-container">
+          <canvas id="chartTiempo"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-header">
+          <div>
+            <div class="chart-title">Distribución de Tareas</div>
+            <div class="chart-subtitle">Por nivel de prioridad</div>
+          </div>
+          <i class="fas fa-layer-group" style="color: var(--accent); font-size: 1.2rem;"></i>
+        </div>
+        <div class="chart-container" style="display: flex; justify-content: center; align-items: center;">
+          <canvas id="chartPrioridades" style="max-height: 250px;"></canvas>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<script>
+  /* =========================
+     USER & UI LOGIC
+  ========================= */
+  const user = localStorage.getItem("focus_user") || "Usuario Local";
+  document.getElementById("username").textContent = user;
+  const initials = user.split(" ").map(w => w[0]).join("").toUpperCase().slice(0,2);
+  document.getElementById("avatar-initials").textContent = initials || "FL";
+
+  const dateEl = document.getElementById("current-date");
+  const now = new Date();
+  const options = { weekday: "long", year: "numeric", month: "long", day: "numeric" };
+  const formattedDate = now.toLocaleDateString("es-MX", options);
+  dateEl.textContent = formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
+
+  function logout() {
+      if(confirm("¿Estás seguro de que deseas cerrar sesión?")) {
+          localStorage.removeItem("focus_session");
+          localStorage.removeItem("focus_user");
+          window.location.href = "login.html";
+      }
+  }
+
+  /* =========================
+     CONFIGURACIÓN DE CHART.JS
+  ========================= */
+  // Variables CSS para usar en los gráficos
+  const style = getComputedStyle(document.body);
+  const cText = style.getPropertyValue('--text-2').trim();
+  const cGrid = style.getPropertyValue('--border-mid').trim();
+  
+  const cBlue = '#00b4d8';
+  const cGreen = '#00e5a0';
+  const cRed = '#ff4d6d';
+  const cWarn = '#ffb830';
+  const cPurple = '#9d4edd';
+
+  // Opciones globales por defecto
+  Chart.defaults.color = cText;
+  Chart.defaults.font.family = "'Instrument Sans', sans-serif";
+  Chart.defaults.plugins.legend.labels.usePointStyle = true;
+  Chart.defaults.plugins.legend.labels.boxWidth = 8;
+  Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(14, 19, 24, 0.9)';
+  Chart.defaults.plugins.tooltip.titleFont = { family: "'Syne', sans-serif", size: 14, weight: 'bold' };
+  Chart.defaults.plugins.tooltip.padding = 12;
+  Chart.defaults.plugins.tooltip.cornerRadius = 8;
+  Chart.defaults.plugins.tooltip.borderColor = 'rgba(255,255,255,0.1)';
+  Chart.defaults.plugins.tooltip.borderWidth = 1;
+
+  // 1. Gráfico Lineal: Productividad
+  const ctxProd = document.getElementById('chartProductividad').getContext('2d');
+  
+  // Crear gradiente para la línea
+  let gradientBlue = ctxProd.createLinearGradient(0, 0, 0, 400);
+  gradientBlue.addColorStop(0, 'rgba(0, 180, 216, 0.5)');   
+  gradientBlue.addColorStop(1, 'rgba(0, 180, 216, 0.0)');
+
+  new Chart(ctxProd, {
+      type: "line",
+      data: {
+          labels: ["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"],
+          datasets: [{
+              label: "Tareas Completadas",
+              data: [2, 3, 1, 4, 2, 6, 3],
+              borderColor: cBlue,
+              backgroundColor: gradientBlue,
+              borderWidth: 3,
+              pointBackgroundColor: cBlue,
+              pointBorderColor: '#0e1318',
+              pointBorderWidth: 2,
+              pointRadius: 5,
+              pointHoverRadius: 7,
+              fill: true,
+              tension: 0.4 // Curvas suaves
+          }]
+      },
+      options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+              y: { 
+                  beginAtZero: true, 
+                  grid: { color: cGrid, drawBorder: false },
+                  border: { display: false }
+              },
+              x: { 
+                  grid: { display: false },
+                  border: { display: false }
+              }
+          },
+          plugins: {
+              legend: { display: false } // Ocultar leyenda para diseño más limpio
+          }
+      }
+  });
+
+  // 2. Gráfico de Barras: Enfoque vs Procrastinación
+  const ctxTiempo = document.getElementById('chartTiempo').getContext('2d');
+  new Chart(ctxTiempo, {
+      type: "bar",
+      data: {
+          labels: ["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"],
+          datasets: [
+              {
+                  label: "Horas de Enfoque",
+                  data: [3, 2, 4, 3, 5, 2, 4],
+                  backgroundColor: cGreen,
+                  borderRadius: 6,
+                  barPercentage: 0.6,
+                  categoryPercentage: 0.8
+              },
+              {
+                  label: "Horas Perdidas",
+                  data: [2, 4, 1, 3, 2, 5, 2], // Datos ajustados para que tenga más sentido
+                  backgroundColor: cRed,
+                  borderRadius: 6,
+                  barPercentage: 0.6,
+                  categoryPercentage: 0.8
+              }
+          ]
+      },
+      options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+              y: { 
+                  beginAtZero: true, 
+                  grid: { color: cGrid, drawBorder: false },
+                  border: { display: false }
+              },
+              x: { 
+                  grid: { display: false },
+                  border: { display: false }
+              }
+          },
+          plugins: {
+              legend: {
+                  position: 'top',
+                  align: 'end',
+                  labels: { color: cText }
+              }
+          }
+      }
+  });
+
+  // 3. Gráfico Doughnut (Extra): Prioridades
+  const ctxPrio = document.getElementById('chartPrioridades').getContext('2d');
+  new Chart(ctxPrio, {
+      type: 'doughnut',
+      data: {
+          labels: ['Alta', 'Media', 'Baja'],
+          datasets: [{
+              data: [35, 45, 20],
+              backgroundColor: [cRed, cBlue, cWarn],
+              borderWidth: 2,
+              borderColor: '#141c24', // Color del surface-2 para hacer "gap"
+              hoverOffset: 4
+          }]
+      },
+      options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '75%', // Hacerlo más fino
+          plugins: {
+              legend: {
+                  position: 'right',
+                  labels: { color: cText }
+              }
+          }
+      }
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FocusLab — Modo Focus</title>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Space+Mono:wght@400;700&family=Syne:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  
+  <style>
+    :root {
+      /* Paleta de FocusLab */
+      --bg:          #080c10;
+      --surface:     #0e1318;
+      --surface-2:   #141c24;
+      --surface-3:   #1c2835;
+      --border:      rgba(255,255,255,0.06);
+      --border-mid:  rgba(255,255,255,0.12);
+      
+      --accent:      #00e5a0; /* Verde neón */
+      --accent-blue: #00b4d8; /* Cian/Azul */
+      --accent-red:  #ff4d6d;
+      --accent-warn: #ffb830;
+      
+      --text-1:      #e8eef4;
+      --text-2:      #7a93a8;
+      --text-3:      #3d5366;
+      
+      --sidebar-w:   250px;
+      --pages-w:     280px;
+      --transition:  0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      --radius:      14px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Instrument Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text-1);
+      height: 100vh;
+      display: flex;
+      overflow: hidden;
+    }
+
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 3px; }
+
+    /* ─── SIDEBAR GLOBAL ─── */
+    .sidebar { width: var(--sidebar-w); background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 100; transition: var(--transition); }
+    .sidebar-brand { padding: 28px 24px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+    .logo-mark { width: 32px; height: 32px; background: var(--surface-3); border: 1px solid var(--border-mid); border-radius: 8px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 12px rgba(0,229,160,0.12); }
+    .logo-mark svg { width: 16px; height: 16px; color: var(--accent); }
+    .brand-text .logo { font-family: 'Syne', sans-serif; font-size: 1.2rem; font-weight: 800; letter-spacing: -0.02em; color: var(--text-1); line-height: 1; }
+    .brand-text .logo em { font-style: normal; color: var(--accent); }
+    
+    .nav-section { flex: 1; padding: 20px 0; overflow-y: auto; }
+    .nav-section-label { display: block; font-size: 0.65rem; font-family: 'Space Mono', monospace; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.1em; padding: 0 24px 10px; }
+    .nav-item { list-style: none; margin-bottom: 4px; }
+    .nav-link { display: flex; align-items: center; gap: 12px; padding: 10px 24px; color: var(--text-2); text-decoration: none; font-size: 0.88rem; font-weight: 500; border-left: 2px solid transparent; transition: all 0.2s; }
+    .nav-link:hover { color: var(--text-1); background: var(--surface-2); }
+    .nav-link.active { color: var(--accent); border-left-color: var(--accent); background: linear-gradient(90deg, rgba(0,229,160,0.08), transparent); }
+    .nav-link i { width: 18px; text-align: center; font-size: 0.9rem; }
+    
+    .sidebar-footer { padding: 16px 20px; border-top: 1px solid var(--border); background: var(--surface); }
+    .sidebar-user { display: flex; align-items: center; justify-content: space-between; padding: 8px; border-radius: 10px; transition: background 0.2s; }
+    .sidebar-user:hover { background: var(--surface-2); }
+    .user-info-wrap { display: flex; align-items: center; gap: 10px; }
+    .avatar { width: 34px; height: 34px; border-radius: 10px; background: linear-gradient(135deg, var(--surface-3), var(--surface-2)); border: 1px solid var(--border-mid); display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 600; color: var(--accent); font-family: 'Syne', sans-serif; }
+    .user-info .name { font-size: 0.82rem; font-weight: 600; color: var(--text-1); }
+    .user-info .role { font-size: 0.65rem; color: var(--accent-blue); font-family: 'Space Mono', monospace; }
+    .btn-logout { background: none; border: none; color: var(--text-3); cursor: pointer; padding: 6px; border-radius: 6px; transition: all 0.2s; }
+    .btn-logout:hover { color: var(--accent-red); background: rgba(255,77,109,0.1); }
+
+    /* ─── SIDEBAR PÁGINAS (DOCS) ─── */
+    .sidebar-pages {
+      width: var(--pages-w);
+      background: var(--surface-2);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      z-index: 90;
+      transition: var(--transition);
+    }
+    
+    .pages-header {
+      padding: 24px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    
+    .pages-title { font-family: 'Syne', sans-serif; font-size: 0.9rem; font-weight: 700; color: var(--text-1); letter-spacing: 0.02em; }
+    
+    .btn-icon { background: none; border: none; color: var(--text-3); cursor: pointer; padding: 6px; border-radius: 6px; transition: 0.2s; }
+    .btn-icon:hover { color: var(--text-1); background: var(--surface-3); }
+
+    .pages-list { flex: 1; overflow-y: auto; padding: 16px 12px; }
+
+    .page-item {
+      padding: 10px 14px; border-radius: 8px; cursor: pointer; color: var(--text-2); font-size: 0.85rem;
+      display: flex; align-items: center; gap: 10px; margin-bottom: 4px; transition: 0.2s;
+    }
+    .page-item i { font-size: 0.8rem; color: var(--text-3); }
+    .page-item:hover { background: var(--surface-3); color: var(--text-1); }
+    .page-item.active { background: rgba(0,180,216,0.1); color: var(--accent-blue); font-weight: 500; border: 1px solid rgba(0,180,216,0.2); }
+    .page-item.active i { color: var(--accent-blue); }
+
+    /* ─── EDITOR PRINCIPAL ─── */
+    .editor-wrapper {
+      flex: 1; display: flex; flex-direction: column; position: relative; background: var(--bg); transition: var(--transition);
+    }
+    
+    .editor-wrapper::before { content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none; background: radial-gradient(ellipse 60% 50% at 50% 0%, rgba(0,229,160,0.03) 0%, transparent 80%); transition: var(--transition); }
+
+    /* Banner Lock */
+    .lock-banner {
+      background: rgba(255,77,109,0.15); border-bottom: 1px solid rgba(255,77,109,0.3);
+      color: var(--accent-red); text-align: center; padding: 10px; font-size: 0.75rem;
+      font-family: 'Space Mono', monospace; letter-spacing: 0.1em; font-weight: 700;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      transform: translateY(-100%); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      position: absolute; top: 0; left: 0; right: 0; z-index: 50;
+    }
+    .lock-banner.show { transform: translateY(0); }
+    .lock-banner .pulse-dot { width: 8px; height: 8px; background: var(--accent-red); border-radius: 50%; box-shadow: 0 0 10px var(--accent-red); animation: pulse-red 1.5s infinite; }
+    
+    @keyframes pulse-red { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+    .editor-content {
+      flex: 1; overflow-y: auto; padding: 60px; display: flex; justify-content: center; position: relative; z-index: 10;
+    }
+    
+    .document { width: 100%; max-width: 760px; padding-bottom: 100px; }
+
+    .title-input {
+      font-family: 'Syne', sans-serif; font-size: 2.5rem; font-weight: 800; color: var(--text-1);
+      background: transparent; border: none; outline: none; width: 100%; margin-bottom: 30px;
+      letter-spacing: -0.02em; line-height: 1.2;
+    }
+    .title-input::placeholder { color: var(--text-3); }
+
+    .block {
+      margin-bottom: 12px; padding: 6px 12px; border-radius: 8px; background: transparent;
+      color: var(--text-1); font-size: 1rem; line-height: 1.6; outline: none; border: 1px solid transparent; transition: 0.2s;
+    }
+    .block[data-empty="true"]::before { content: attr(placeholder); color: var(--text-3); pointer-events: none; display: block; /* For Firefox */ }
+    
+    .block:hover { background: var(--surface-2); }
+    .block:focus { background: var(--surface-2); border-color: var(--border-mid); }
+
+    .btn-add-block {
+      background: none; border: 1px dashed var(--border-mid); color: var(--text-3); padding: 10px;
+      width: 100%; text-align: center; border-radius: 8px; cursor: pointer; transition: 0.2s; font-size: 0.85rem; margin-top: 10px;
+    }
+    .btn-add-block:hover { border-color: var(--accent-blue); color: var(--accent-blue); background: rgba(0,180,216,0.05); }
+
+    /* ─── POMODORO WIDGET ─── */
+    .pomodoro-widget {
+      position: fixed; right: 36px; bottom: 36px; width: 280px; z-index: 100;
+      background: rgba(14, 19, 24, 0.7); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-mid); border-radius: 20px; padding: 24px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05);
+      transition: var(--transition);
+    }
+    
+    .pomodoro-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .pomodoro-title { font-size: 0.75rem; color: var(--text-2); font-family: 'Space Mono', monospace; text-transform: uppercase; letter-spacing: 0.1em; display: flex; align-items: center; gap: 8px; }
+    
+    .time-display {
+      font-family: 'Syne', sans-serif; font-size: 4rem; font-weight: 800; color: var(--text-1);
+      text-align: center; line-height: 1; margin-bottom: 24px; transition: color 0.3s;
+    }
+    .time-display.running { color: var(--accent); text-shadow: 0 0 20px rgba(0,229,160,0.3); }
+
+    .controls { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+    
+    .btn-control {
+      border: none; border-radius: 10px; padding: 12px 0; font-size: 0.85rem; font-weight: 600;
+      cursor: pointer; transition: 0.2s; display: flex; flex-direction: column; align-items: center; gap: 4px;
+    }
+    .btn-control i { font-size: 1rem; }
+    
+    .btn-play { background: rgba(0,229,160,0.1); color: var(--accent); border: 1px solid rgba(0,229,160,0.2); }
+    .btn-play:hover { background: var(--accent); color: #000; }
+    
+    .btn-pause { background: rgba(255,184,48,0.1); color: var(--accent-warn); border: 1px solid rgba(255,184,48,0.2); }
+    .btn-pause:hover { background: var(--accent-warn); color: #000; }
+    
+    .btn-reset { background: rgba(255,77,109,0.1); color: var(--accent-red); border: 1px solid rgba(255,77,109,0.2); }
+    .btn-reset:hover { background: var(--accent-red); color: #fff; }
+
+    /* ─── ESTADOS DE BLOQUEO (LOCKED) ─── */
+    body.locked .sidebar, body.locked .sidebar-pages {
+      opacity: 0.2; pointer-events: none; filter: grayscale(100%);
+    }
+    body.locked .editor-wrapper::before {
+      background: radial-gradient(ellipse 70% 60% at 50% 0%, rgba(255,77,109,0.05) 0%, transparent 80%);
+    }
+    body.locked .pomodoro-widget { border-color: rgba(0,229,160,0.4); box-shadow: 0 0 40px rgba(0,229,160,0.1); }
+
+  </style>
+</head>
+
+<body>
+
+<script>
+  if (!localStorage.getItem("focus_session")) {
+    window.location.href = "login.html";
+  }
+</script>
+
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="logo-mark">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>
+    </div>
+    <div class="brand-text">
+      <div class="logo">Focus<em>Lab</em></div>
+      <div class="tagline">workspace</div>
+    </div>
+  </div>
+
+  <div class="nav-section">
+    <span class="nav-section-label">Menú Principal</span>
+    <ul style="padding:0;">
+      <li class="nav-item"><a class="nav-link" href="index.html"><i class="fas fa-home"></i> Inicio</a></li>
+      <li class="nav-item"><a class="nav-link" href="tables.html"><i class="fas fa-tasks"></i> Tareas</a></li>
+      <li class="nav-item"><a class="nav-link" href="charts.html"><i class="fas fa-chart-line"></i> Analítica</a></li>
+      <li class="nav-item"><a class="nav-link active" href="focus.html"><i class="fas fa-bullseye"></i> Modo Focus</a></li>
+    </ul>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="sidebar-user">
+      <div class="user-info-wrap">
+        <div class="avatar" id="avatar-initials">--</div>
+        <div class="user-info">
+          <div class="name" id="username">Cargando…</div>
+          <div class="role">Pro · Activo</div>
+        </div>
+      </div>
+      <button class="btn-logout" onclick="logout()" title="Cerrar sesión"><i class="fas fa-sign-out-alt"></i></button>
+    </div>
+  </div>
+</aside>
+
+<div class="sidebar-pages">
+  <div class="pages-header">
+    <div class="pages-title">Apuntes y Notas</div>
+    <button class="btn-icon" onclick="newPage()" title="Nueva página"><i class="fas fa-plus"></i></button>
+  </div>
+  <div class="pages-list" id="pages">
+    </div>
+</div>
+
+<div class="editor-wrapper">
+  
+  <div class="lock-banner" id="lockBanner">
+    <div class="pulse-dot"></div>
+    MODO FOCO ACTIVO — NAVEGACIÓN BLOQUEADA
+  </div>
+
+  <div class="editor-content">
+    <div class="document">
+      <input id="title" class="title-input" placeholder="Título de la página..." oninput="save()" />
+      
+      <div id="blocks">
+        </div>
+
+      <button class="btn-add-block" onclick="addBlock()">
+        <i class="fas fa-plus"></i> Añadir bloque de texto
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="pomodoro-widget">
+  <div class="pomodoro-header">
+    <div class="pomodoro-title"><i class="fas fa-stopwatch" style="color:var(--accent)"></i> Focus Timer</div>
+    <i class="fas fa-ellipsis-h" style="color:var(--text-3); font-size: 0.8rem; cursor:pointer;"></i>
+  </div>
+  
+  <div class="time-display" id="time">25:00</div>
+  
+  <div class="controls">
+    <button class="btn-control btn-play" onclick="startTimer()" title="Iniciar"><i class="fas fa-play"></i></button>
+    <button class="btn-control btn-pause" onclick="pauseTimer()" title="Pausar"><i class="fas fa-pause"></i></button>
+    <button class="btn-control btn-reset" onclick="resetTimer()" title="Reiniciar"><i class="fas fa-redo"></i></button>
+  </div>
+</div>
+
+<script>
+  /* =========================
+     USER & UI LOGIC
+  ========================= */
+  const user = localStorage.getItem("focus_user") || "Usuario Local";
+  document.getElementById("username").textContent = user;
+  const initials = user.split(" ").map(w => w[0]).join("").toUpperCase().slice(0,2);
+  document.getElementById("avatar-initials").textContent = initials || "FL";
+
+  function logout() {
+      if(confirm("¿Estás seguro de que deseas cerrar sesión?")) {
+          localStorage.removeItem("focus_session");
+          localStorage.removeItem("focus_user");
+          window.location.href = "login.html";
+      }
+  }
+
+  /* =========================
+     DATOS Y ESTADO
+  ========================= */
+  // Datos iniciales de demostración
+  let data = JSON.parse(localStorage.getItem("focus_pages")) || [
+      {
+          title: "Borrador Principal",
+          blocks: [{ text: "Escribe aquí tus ideas principales..." }, { text: "" }],
+          pomodoro: 1500
+      },
+      {
+          title: "Notas de Reunión",
+          blocks: [{ text: "Revisión de métricas semanales." }],
+          pomodoro: 1500
+      }
+  ];
+
+  let currentPage = 0;
+
+  /* =========================
+     GUARDADO AUTO
+  ========================= */
+  function save() {
+      data[currentPage].title = document.getElementById("title").value;
+
+      let blocksEls = document.querySelectorAll(".block");
+      data[currentPage].blocks = [];
+
+      blocksEls.forEach(b => {
+          data[currentPage].blocks.push({ text: b.innerText });
+          // Lógica visual para placeholder
+          if(b.innerText.trim() === "") b.setAttribute("data-empty", "true");
+          else b.removeAttribute("data-empty");
+      });
+
+      data[currentPage].pomodoro = timeLeft;
+      localStorage.setItem("focus_pages", JSON.stringify(data));
+      renderPages();
+  }
+
+  /* =========================
+     RENDER: PÁGINAS
+  ========================= */
+  function renderPages() {
+      let pages = document.getElementById("pages");
+      pages.innerHTML = "";
+
+      data.forEach((p, i) => {
+          let titleDisplay = p.title.trim() === "" ? "Página sin título" : p.title;
+          pages.innerHTML += `
+          <div class="page-item ${i === currentPage ? 'active' : ''}" onclick="openPage(${i})">
+              <i class="fas fa-file-alt"></i> <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${titleDisplay}</span>
+          </div>
+          `;
+      });
+  }
+
+  function openPage(i) {
+      if (locked && i !== currentPage) {
+          alert("🔒 El Modo Focus está activo. Concéntrate en la tarea actual.");
+          return;
+      }
+
+      currentPage = i;
+      document.getElementById("title").value = data[i].title;
+      timeLeft = data[i].pomodoro || 1500;
+
+      renderBlocks();
+      renderPages();
+      updateTimer();
+  }
+
+  /* =========================
+     RENDER: BLOQUES (EDITOR)
+  ========================= */
+  function renderBlocks() {
+      let c = document.getElementById("blocks");
+      c.innerHTML = "";
+
+      data[currentPage].blocks.forEach((b, index) => {
+          let emptyAttr = b.text.trim() === "" ? 'data-empty="true"' : '';
+          c.innerHTML += `
+          <div class="block" contenteditable="true" placeholder="Presiona '/' para comandos o escribe texto..." oninput="save()" id="block-${index}" ${emptyAttr}>${b.text}</div>
+          `;
+      });
+
+      // Añadir evento enter para crear nuevo bloque
+      document.querySelectorAll('.block').forEach((el, idx) => {
+          el.addEventListener('keydown', (e) => {
+              if(e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  addBlock(idx + 1);
+              }
+          });
+      });
+  }
+
+  function addBlock(index) {
+      // Si no se pasa índice, se añade al final
+      if (typeof index === 'undefined') index = data[currentPage].blocks.length;
+      
+      data[currentPage].blocks.splice(index, 0, { text: "" });
+      save();
+      renderBlocks();
+      
+      // Enfocar el nuevo bloque
+      setTimeout(() => {
+          let newBlock = document.getElementById(`block-${index}`);
+          if(newBlock) newBlock.focus();
+      }, 50);
+  }
+
+  function newPage() {
+      if (locked) {
+          alert("🔒 El Modo Focus está activo. Termina tu sesión primero.");
+          return;
+      }
+
+      data.push({
+          title: "",
+          blocks: [{ text: "" }],
+          pomodoro: 1500
+      });
+
+      currentPage = data.length - 1;
+      save();
+      renderPages();
+      openPage(currentPage);
+      document.getElementById("title").focus();
+  }
+
+  /* =========================
+     LÓGICA POMODORO & LOCK
+  ========================= */
+  let timer;
+  let timeLeft = 1500;
+  let running = false;
+  let locked = false;
+
+  const timeDisplay = document.getElementById("time");
+  const lockBanner = document.getElementById("lockBanner");
+
+  function lockUI() {
+      document.body.classList.add("locked");
+      lockBanner.classList.add("show");
+      timeDisplay.classList.add("running");
+      locked = true;
+  }
+
+  function unlockUI() {
+      document.body.classList.remove("locked");
+      lockBanner.classList.remove("show");
+      timeDisplay.classList.remove("running");
+      locked = false;
+  }
+
+  function updateTimer() {
+      let min = Math.floor(timeLeft / 60);
+      let sec = timeLeft % 60;
+      timeDisplay.innerText = `${min}:${sec < 10 ? "0" + sec : sec}`;
+  }
+
+  function startTimer() {
+      if (running) return;
+      if (timeLeft <= 0) timeLeft = 1500; // Reset si estaba en 0
+      
+      running = true;
+      lockUI();
+
+      timer = setInterval(() => {
+          if (timeLeft > 0) {
+              timeLeft--;
+              updateTimer();
+              // Guardar progreso cada 5 segundos para optimizar
+              if(timeLeft % 5 === 0) save();
+          } else {
+              clearInterval(timer);
+              running = false;
+              unlockUI();
+              alert("✨ ¡Pomodoro terminado! Es hora de un breve descanso.");
+          }
+      }, 1000);
+  }
+
+  function pauseTimer() {
+      clearInterval(timer);
+      running = false;
+      unlockUI();
+      save();
+  }
+
+  function resetTimer() {
+      clearInterval(timer);
+      running = false;
+      timeLeft = 1500; // 25 min default
+      updateTimer();
+      unlockUI();
+      save();
+  }
+
+  /* INIT */
+  renderPages();
+  openPage(currentPage);
+  updateTimer();
+
+</script>
+
+</body>
+</html>

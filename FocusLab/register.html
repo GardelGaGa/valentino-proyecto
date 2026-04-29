@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro — FocusLab</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Instrument+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg:          #080c10;
+            --surface:     #0e1318;
+            --surface-2:   #141c24;
+            --surface-3:   #1c2835;
+            --border:      rgba(255,255,255,0.06);
+            --border-mid:  rgba(255,255,255,0.12);
+            --accent:      #00e5a0;
+            --accent-dim:  rgba(0,229,160,0.12);
+            --accent-glow: rgba(0,229,160,0.25);
+            --accent-2:    #0077ff;
+            --text-1:      #e8eef4;
+            --text-2:      #7a93a8;
+            --text-3:      #3d5366;
+            --danger:      #ff4d6d;
+            --warn:        #ffb830;
+            --radius-sm:   8px;
+            --radius:      14px;
+            --radius-lg:   22px;
+            --transition:  .22s cubic-bezier(.4,0,.2,1);
+        }
+
+        html, body {
+            height: 100%;
+            font-family: 'Instrument Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text-1);
+        }
+
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        /* ── Atmospheric background ── */
+        .scene {
+            position: fixed; inset: 0; z-index: 0;
+            pointer-events: none;
+        }
+
+        .scene-gradient {
+            position: absolute; inset: 0;
+            background:
+                radial-gradient(ellipse 70% 50% at 80% 10%, rgba(0,229,160,0.07) 0%, transparent 60%),
+                radial-gradient(ellipse 50% 60% at 10% 90%, rgba(0,119,255,0.06) 0%, transparent 55%),
+                radial-gradient(ellipse 40% 40% at 50% 50%, rgba(0,0,0,0) 0%, #080c10 80%);
+        }
+
+        /* Subtle grid */
+        .scene-grid {
+            position: absolute; inset: 0;
+            background-image:
+                linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+            background-size: 36px 36px;
+            mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
+        }
+
+        /* Floating orbs */
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(90px);
+            will-change: transform;
+            animation: float-orb 18s ease-in-out infinite alternate;
+        }
+
+        .orb-1 {
+            width: 480px; height: 480px;
+            background: radial-gradient(circle, rgba(0,229,160,0.15), transparent 70%);
+            top: -180px; right: -140px;
+            animation-duration: 20s;
+        }
+
+        .orb-2 {
+            width: 360px; height: 360px;
+            background: radial-gradient(circle, rgba(0,119,255,0.12), transparent 70%);
+            bottom: -120px; left: -100px;
+            animation-duration: 16s;
+            animation-delay: -8s;
+        }
+
+        @keyframes float-orb {
+            0%   { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(28px, 36px) scale(1.06); }
+        }
+
+        /* Corner accent lines */
+        .corner-lines {
+            position: absolute; inset: 0;
+        }
+
+        .corner-line {
+            position: absolute;
+            background: linear-gradient(var(--accent), transparent);
+            opacity: 0.15;
+        }
+        .cl-top-left  { width: 1px; height: 120px; top: 0; left: 40px; }
+        .cl-top-left2 { height: 1px; width: 120px; top: 40px; left: 0; }
+        .cl-bot-right  { width: 1px; height: 120px; bottom: 0; right: 40px; }
+        .cl-bot-right2 { height: 1px; width: 120px; bottom: 40px; right: 0; }
+
+        /* ── Card ── */
+        .card {
+            position: relative; z-index: 1;
+            width: min(440px, 94vw);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            box-shadow:
+                0 0 0 1px rgba(0,229,160,0.04),
+                0 40px 80px rgba(0,0,0,0.6),
+                0 8px 24px rgba(0,0,0,0.4),
+                inset 0 1px 0 rgba(255,255,255,0.04);
+            padding: 40px 38px 34px;
+            animation: card-in .65s cubic-bezier(.22,1,.36,1) both;
+            overflow: hidden;
+        }
+
+        /* Inner glow at top */
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 50%;
+            transform: translateX(-50%);
+            width: 260px; height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(0,229,160,0.5), transparent);
+        }
+
+        @keyframes card-in {
+            from { opacity: 0; transform: translateY(28px) scale(.97); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* ── Logo ── */
+        .logo-row {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            margin-bottom: 32px;
+        }
+
+        .logo-mark {
+            width: 36px; height: 36px;
+            background: var(--surface-3);
+            border: 1px solid var(--border-mid);
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            position: relative;
+            box-shadow: 0 0 12px var(--accent-dim), inset 0 1px 0 rgba(255,255,255,0.06);
+        }
+
+        .logo-mark::after {
+            content: '';
+            position: absolute; inset: 0;
+            border-radius: 10px;
+            box-shadow: 0 0 18px rgba(0,229,160,0.3);
+            opacity: 0;
+            transition: opacity .3s;
+        }
+
+        .logo-mark:hover::after { opacity: 1; }
+
+        .logo-mark svg {
+            width: 18px; height: 18px;
+            color: var(--accent);
+        }
+
+        .logo-text {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 700;
+            letter-spacing: -.02em;
+            color: var(--text-1);
+        }
+
+        .logo-text em {
+            font-style: normal;
+            color: var(--accent);
+        }
+
+        /* Status badge */
+        .status-badge {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(0,229,160,0.08);
+            border: 1px solid rgba(0,229,160,0.18);
+            border-radius: 20px;
+            padding: 4px 10px;
+            font-size: .7rem;
+            font-weight: 500;
+            color: var(--accent);
+            letter-spacing: .04em;
+        }
+
+        .status-dot {
+            width: 5px; height: 5px;
+            border-radius: 50%;
+            background: var(--accent);
+            box-shadow: 0 0 5px var(--accent);
+            animation: pulse-dot 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; }
+            50%       { opacity: 0.4; }
+        }
+
+        /* ── Heading ── */
+        .heading-block {
+            margin-bottom: 28px;
+        }
+
+        .card-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--text-1);
+            line-height: 1.15;
+            letter-spacing: -.03em;
+            margin-bottom: 6px;
+        }
+
+        .card-title .accent-word {
+            background: linear-gradient(135deg, var(--accent), #00b4d8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .card-sub {
+            font-size: .84rem;
+            color: var(--text-2);
+            font-weight: 400;
+            letter-spacing: .01em;
+        }
+
+        /* ── Rule ── */
+        .rule {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--border-mid) 40%, var(--border-mid) 60%, transparent);
+            margin: 0 -38px 28px;
+        }
+
+        /* ── Field ── */
+        .field {
+            margin-bottom: 14px;
+        }
+
+        .field-label {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 7px;
+        }
+
+        .field-label span {
+            font-size: .72rem;
+            font-weight: 600;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: var(--text-3);
+        }
+
+        .field-label .hint {
+            font-size: .7rem;
+            font-weight: 400;
+            text-transform: none;
+            letter-spacing: 0;
+            color: var(--text-3);
+        }
+
+        .field-inner {
+            position: relative;
+        }
+
+        .field-icon {
+            position: absolute;
+            left: 13px; top: 50%;
+            transform: translateY(-50%);
+            width: 16px; height: 16px;
+            color: var(--text-3);
+            pointer-events: none;
+            transition: color var(--transition);
+        }
+
+        .field-input {
+            width: 100%;
+            padding: 12px 13px 12px 40px;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-family: 'Instrument Sans', sans-serif;
+            font-size: .9rem;
+            color: var(--text-1);
+            outline: none;
+            transition:
+                border-color var(--transition),
+                box-shadow var(--transition),
+                background var(--transition);
+        }
+
+        .field-input::placeholder {
+            color: var(--text-3);
+        }
+
+        .field-input:hover {
+            border-color: var(--border-mid);
+            background: var(--surface-3);
+        }
+
+        .field-input:focus {
+            border-color: rgba(0,229,160,0.45);
+            background: var(--surface-3);
+            box-shadow: 0 0 0 3px rgba(0,229,160,0.1), inset 0 1px 0 rgba(255,255,255,0.02);
+        }
+
+        .field-inner:focus-within .field-icon {
+            color: var(--accent);
+        }
+
+        /* toggle password */
+        .toggle-pass {
+            position: absolute;
+            right: 12px; top: 50%;
+            transform: translateY(-50%);
+            background: none; border: none;
+            cursor: pointer;
+            color: var(--text-3);
+            display: flex; align-items: center;
+            padding: 3px;
+            transition: color var(--transition);
+        }
+        .toggle-pass:hover { color: var(--text-2); }
+        .toggle-pass svg { width: 16px; height: 16px; }
+
+        /* ── Strength meter ── */
+        .strength-wrap {
+            margin-top: 8px;
+            display: none;
+        }
+
+        .strength-bars {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 5px;
+        }
+
+        .strength-bar {
+            flex: 1; height: 2px;
+            background: var(--surface-3);
+            border-radius: 4px;
+            transition: background .35s;
+        }
+
+        .bar-weak   { background: var(--danger) !important; }
+        .bar-fair   { background: var(--warn) !important; }
+        .bar-strong { background: var(--accent) !important; }
+
+        .strength-label {
+            font-size: .7rem;
+            color: var(--text-3);
+            transition: color .3s;
+            min-height: 13px;
+        }
+
+        /* ── Requirements row ── */
+        .requirements {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .req-chip {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 9px;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            font-size: .68rem;
+            color: var(--text-3);
+            transition: all .25s;
+        }
+
+        .req-chip.ok {
+            border-color: rgba(0,229,160,0.25);
+            color: var(--accent);
+            background: rgba(0,229,160,0.06);
+        }
+
+        .req-chip svg {
+            width: 10px; height: 10px;
+            flex-shrink: 0;
+        }
+
+        /* ── Submit button ── */
+        .btn-row {
+            margin-top: 22px;
+        }
+
+        .btn-main {
+            width: 100%;
+            padding: 13px;
+            border: none;
+            border-radius: var(--radius);
+            background: linear-gradient(135deg, #00e5a0 0%, #00b4d8 100%);
+            color: #050a07;
+            font-family: 'Syne', sans-serif;
+            font-size: .92rem;
+            font-weight: 700;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: transform var(--transition), box-shadow var(--transition), opacity var(--transition);
+            box-shadow: 0 4px 20px rgba(0,229,160,0.25);
+        }
+
+        .btn-main::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.2), transparent);
+            opacity: 0;
+            transition: opacity var(--transition);
+        }
+
+        .btn-main:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 28px rgba(0,229,160,0.38);
+        }
+
+        .btn-main:hover::before { opacity: 1; }
+        .btn-main:active { transform: translateY(0); }
+
+        .btn-main:disabled {
+            opacity: .5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Spinner */
+        .btn-spinner {
+            display: none;
+            width: 16px; height: 16px;
+            border: 2px solid rgba(5,10,7,0.3);
+            border-top-color: #050a07;
+            border-radius: 50%;
+            animation: spin .65s linear infinite;
+            margin: 0 auto;
+        }
+
+        .btn-main.loading .btn-text { display: none; }
+        .btn-main.loading .btn-spinner { display: block; }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── Divider with text ── */
+        .or-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 18px 0;
+        }
+
+        .or-row hr {
+            flex: 1;
+            border: none;
+            height: 1px;
+            background: var(--border);
+        }
+
+        .or-row span {
+            font-size: .72rem;
+            color: var(--text-3);
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            white-space: nowrap;
+        }
+
+        /* ── Footer ── */
+        .card-footer {
+            margin-top: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            font-size: .82rem;
+            color: var(--text-2);
+        }
+
+        .card-footer a {
+            color: var(--accent);
+            font-weight: 600;
+            text-decoration: none;
+            position: relative;
+            transition: opacity var(--transition);
+        }
+
+        .card-footer a:hover { opacity: .75; }
+
+        /* ── Toast ── */
+        .toast {
+            position: fixed;
+            bottom: 30px; left: 50%;
+            transform: translateX(-50%) translateY(70px);
+            background: var(--surface-2);
+            border: 1px solid var(--border-mid);
+            color: var(--text-1);
+            padding: 11px 20px;
+            border-radius: var(--radius);
+            font-size: .84rem;
+            font-weight: 500;
+            opacity: 0;
+            transition: transform .4s cubic-bezier(.22,1,.36,1), opacity .4s;
+            z-index: 999;
+            white-space: nowrap;
+            display: flex; align-items: center; gap: 9px;
+            box-shadow: 0 16px 40px rgba(0,0,0,0.5);
+        }
+
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        .toast-icon { width: 16px; height: 16px; flex-shrink: 0; }
+        .toast.success .toast-icon { color: var(--accent); }
+        .toast.error   .toast-icon { color: var(--danger); }
+
+        /* ── Scroll bar ── */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 3px; }
+    </style>
+</head>
+<body>
+
+<!-- Scene -->
+<div class="scene">
+    <div class="scene-gradient"></div>
+    <div class="scene-grid"></div>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="corner-lines">
+        <div class="corner-line cl-top-left"></div>
+        <div class="corner-line cl-top-left2"></div>
+        <div class="corner-line cl-bot-right"></div>
+        <div class="corner-line cl-bot-right2"></div>
+    </div>
+</div>
+
+<!-- Card -->
+<div class="card">
+
+    <!-- Logo row -->
+    <div class="logo-row">
+        <div class="logo-mark">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="9"/>
+                <polyline points="12 7 12 12 15 14"/>
+            </svg>
+        </div>
+        <span class="logo-text">Focus<em>Lab</em></span>
+        <div class="status-badge">
+            <div class="status-dot"></div>
+            BETA
+        </div>
+    </div>
+
+    <!-- Heading -->
+    <div class="heading-block">
+        <h1 class="card-title">Crea tu <span class="accent-word">cuenta</span></h1>
+        <p class="card-sub">Organiza tu productividad desde un solo lugar</p>
+    </div>
+
+    <div class="rule"></div>
+
+    <!-- Form -->
+    <form id="registerForm" novalidate>
+
+        <!-- Usuario -->
+        <div class="field">
+            <div class="field-label">
+                <span>Usuario</span>
+            </div>
+            <div class="field-inner">
+                <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                </svg>
+                <input class="field-input" type="text" id="regUser" placeholder="nombre_de_usuario" autocomplete="username" required>
+            </div>
+        </div>
+
+        <!-- Contraseña -->
+        <div class="field">
+            <div class="field-label">
+                <span>Contraseña</span>
+                <span class="hint">Mín. 8 caracteres</span>
+            </div>
+            <div class="field-inner">
+                <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+                <input class="field-input" type="password" id="regPass" placeholder="••••••••••" autocomplete="new-password" required>
+                <button type="button" class="toggle-pass" id="togglePass" aria-label="Mostrar contraseña">
+                    <svg id="eyeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Strength -->
+            <div class="strength-wrap" id="strengthWrap">
+                <div class="strength-bars">
+                    <div class="strength-bar" id="sb1"></div>
+                    <div class="strength-bar" id="sb2"></div>
+                    <div class="strength-bar" id="sb3"></div>
+                    <div class="strength-bar" id="sb4"></div>
+                </div>
+                <div class="strength-label" id="strengthLabel"></div>
+            </div>
+
+            <!-- Requirement chips -->
+            <div class="requirements" id="reqWrap">
+                <div class="req-chip" id="req-len">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                    8+ caracteres
+                </div>
+                <div class="req-chip" id="req-upper">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                    Mayúscula
+                </div>
+                <div class="req-chip" id="req-num">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                    Número
+                </div>
+                <div class="req-chip" id="req-sym">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                    Símbolo
+                </div>
+            </div>
+        </div>
+
+        <!-- Submit -->
+        <div class="btn-row">
+            <button type="submit" class="btn-main" id="submitBtn">
+                <span class="btn-text">Crear cuenta →</span>
+                <div class="btn-spinner"></div>
+            </button>
+        </div>
+
+    </form>
+
+    <!-- Footer -->
+    <p class="card-footer">
+        ¿Ya tienes cuenta?
+        <a href="login.html">Inicia sesión</a>
+    </p>
+
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">
+    <svg class="toast-icon" id="toastIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12"/>
+    </svg>
+    <span id="toastMsg"></span>
+</div>
+
+<script>
+    // ── Toggle password ──
+    const passInput = document.getElementById('regPass');
+    const toggleBtn = document.getElementById('togglePass');
+    const eyeIcon   = document.getElementById('eyeIcon');
+
+    const SVG_EYE_OPEN   = `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>`;
+    const SVG_EYE_CLOSED = `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>`;
+
+    toggleBtn.addEventListener('click', () => {
+        const show = passInput.type === 'password';
+        passInput.type = show ? 'text' : 'password';
+        eyeIcon.innerHTML = show ? SVG_EYE_CLOSED : SVG_EYE_OPEN;
+    });
+
+    // ── Password strength ──
+    const sWrap  = document.getElementById('strengthWrap');
+    const rWrap  = document.getElementById('reqWrap');
+    const sLabel = document.getElementById('strengthLabel');
+    const sBars  = [1,2,3,4].map(i => document.getElementById('sb'+i));
+
+    const reqs = {
+        len:   { el: document.getElementById('req-len'),   test: p => p.length >= 8 },
+        upper: { el: document.getElementById('req-upper'), test: p => /[A-Z]/.test(p) },
+        num:   { el: document.getElementById('req-num'),   test: p => /[0-9]/.test(p) },
+        sym:   { el: document.getElementById('req-sym'),   test: p => /[^A-Za-z0-9]/.test(p) }
+    };
+
+    passInput.addEventListener('input', () => {
+        const val = passInput.value;
+
+        if (!val) {
+            sWrap.style.display = 'none';
+            rWrap.style.display = 'none';
+            return;
+        }
+
+        sWrap.style.display = 'block';
+        rWrap.style.display = 'flex';
+
+        // score
+        let score = 0;
+        Object.values(reqs).forEach(r => { if (r.test(val)) score++; });
+
+        // bars
+        const cls = score <= 1 ? 'bar-weak' : score <= 2 ? 'bar-fair' : 'bar-strong';
+        sBars.forEach((b, i) => {
+            b.className = 'strength-bar' + (i < score ? ' ' + cls : '');
+        });
+
+        const labels = ['', 'Débil', 'Regular', 'Buena', 'Fuerte'];
+        const colors = ['', 'var(--danger)', 'var(--warn)', 'var(--accent)', 'var(--accent)'];
+        sLabel.textContent = labels[score] || '';
+        sLabel.style.color = colors[score] || 'var(--text-3)';
+
+        // chips
+        Object.values(reqs).forEach(r => {
+            r.el.classList.toggle('ok', r.test(val));
+        });
+    });
+
+    // ── Toast ──
+    let toastTimer;
+    function showToast(msg, type = 'success') {
+        clearTimeout(toastTimer);
+        const t   = document.getElementById('toast');
+        const ico = document.getElementById('toastIcon');
+        document.getElementById('toastMsg').textContent = msg;
+
+        if (type === 'success') {
+            ico.innerHTML = `<polyline points="20 6 9 17 4 12"/>`;
+        } else {
+            ico.innerHTML = `<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>`;
+        }
+
+        t.className = `toast ${type} show`;
+        toastTimer = setTimeout(() => t.classList.remove('show'), 3400);
+    }
+
+    // ── Form submit ──
+    document.getElementById('registerForm').addEventListener('submit', e => {
+        e.preventDefault();
+
+        const user = document.getElementById('regUser').value.trim();
+        const pass = passInput.value;
+
+        if (!user) {
+            showToast('Ingresa un nombre de usuario', 'error');
+            return;
+        }
+        if (pass.length < 8) {
+            showToast('La contraseña debe tener al menos 8 caracteres', 'error');
+            return;
+        }
+
+        const btn = document.getElementById('submitBtn');
+        btn.classList.add('loading');
+        btn.disabled = true;
+
+        setTimeout(() => {
+            btn.classList.remove('loading');
+            btn.disabled = false;
+            showToast('Cuenta creada exitosamente', 'success');
+        }, 1800);
+    });
+</script>
+
+</body>
+</html>
