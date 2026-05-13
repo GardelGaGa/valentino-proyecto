@@ -346,9 +346,11 @@
 <body>
 
 <script>
-  if (!localStorage.getItem("focus_session")) {
-    window.location.href = "login.html";
-  }
+const token = sessionStorage.getItem("focus_token");
+
+if (!token) {
+  window.location.href = "login.html";
+}
 </script>
 
 <aside class="sidebar">
@@ -628,6 +630,21 @@
       setTimeout(() => { bar.style.width = target; }, 250);
     });
   });
+
+  async function loadTodaySessions() {
+  const token = sessionStorage.getItem("focus_token");
+
+  const res = await fetch("/api/sessions/today", {
+    headers: {
+      "Authorization": `Bearer ${token}`
+    }
+  });
+
+  const data = await res.json();
+  console.log("SESIONES HOY:", data);
+
+  return data;
+}
 </script>
 
 </body>

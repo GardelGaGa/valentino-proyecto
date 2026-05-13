@@ -1,17 +1,23 @@
 const mysql = require("mysql2");
 
-const db = mysql.createConnection({
-    host: "localhost",
-    user: "root",
-    password: "",
-    database: "focuslab"
+// Usamos pool en vez de createConnection para mejor manejo de conexiones
+const db = mysql.createPool({
+    host:     process.env.DB_HOST     || "localhost",
+    user:     process.env.DB_USER     || "root",
+    password: process.env.DB_PASSWORD || "Password2026!",
+    database: process.env.DB_NAME     || "focuslab",
+    waitForConnections: true,
+    connectionLimit:    10,
+    queueLimit:         0
 });
 
-db.connect((err) => {
+// Test de conexión al iniciar
+db.getConnection((err, connection) => {
     if (err) {
-        console.log("Error conexión BD:", err);
+        console.error("❌ Error al conectar con MySQL:", err.message);
     } else {
-        console.log("Conectado a MySQL FocusLab");
+        console.log("✅ Conectado a MySQL — FocusLab");
+        connection.release();
     }
 });
 
