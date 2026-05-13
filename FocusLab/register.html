@@ -679,12 +679,14 @@
   </div>
 
   <script>
+    // ── Referencias DOM ─────────────────────────────────────
+    const passInput  = document.getElementById('regPass');
+    const toggleBtn  = document.getElementById('togglePass');
+    const form       = document.getElementById('registerForm');
+    const errorMsg   = document.getElementById('errorMsg');
 
-
-
-
-
-    const EYE_OPEN = `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>`;
+    // ── Toggle contraseña ────────────────────────────────────
+    const EYE_OPEN   = `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>`;
     const EYE_CLOSED = `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>`;
 
     toggleBtn.addEventListener('click', () => {
@@ -693,66 +695,95 @@
       document.getElementById('eyeIcon').innerHTML = show ? EYE_CLOSED : EYE_OPEN;
     });
 
-    const form = document.getElementById('registerForm');
-    const errorMsg = document.getElementById('errorMsg');
+    // ── Strength meter ────────────────────────────────────────
+    const strengthWrap  = document.getElementById('strengthWrap');
+    const reqWrap       = document.getElementById('reqWrap');
+    const strengthLabel = document.getElementById('strengthLabel');
+    const bars          = [document.getElementById('sb1'), document.getElementById('sb2'),
+                           document.getElementById('sb3'), document.getElementById('sb4')];
 
-    function showError(msg) {
-      errorMsg.textContent = msg;
-      errorMsg.classList.add('show');
+    function calcStrength(p) {
+      let score = 0;
+      if (p.length >= 8)                  score++;
+      if (/[A-Z]/.test(p))                score++;
+      if (/[0-9]/.test(p))                score++;
+      if (/[^A-Za-z0-9]/.test(p))         score++;
+      return score;
     }
 
-    function hideError() {
-      errorMsg.classList.remove('show');
-    }
+    passInput.addEventListener('input', () => {
+      const p = passInput.value;
+      if (!p) { strengthWrap.style.display = 'none'; reqWrap.style.display = 'none'; return; }
 
+      strengthWrap.style.display = 'block';
+      reqWrap.style.display = 'flex';
+
+      const score = calcStrength(p);
+      const cls   = score <= 1 ? 'bar-weak' : score === 2 ? 'bar-fair' : 'bar-strong';
+      const label = score <= 1 ? 'Débil' : score === 2 ? 'Regular' : score === 3 ? 'Buena' : 'Excelente';
+      const lClr  = score <= 1 ? 'var(--danger)' : score === 2 ? 'var(--warn)' : 'var(--success)';
+
+      bars.forEach((b, i) => {
+        b.className = 'strength-bar';
+        if (i < score) b.classList.add(cls);
+      });
+      strengthLabel.textContent = label;
+      strengthLabel.style.color = lClr;
+
+      // Requirement chips
+      document.getElementById('req-len').classList.toggle('ok', p.length >= 8);
+      document.getElementById('req-upper').classList.toggle('ok', /[A-Z]/.test(p));
+      document.getElementById('req-num').classList.toggle('ok', /[0-9]/.test(p));
+      document.getElementById('req-sym').classList.toggle('ok', /[^A-Za-z0-9]/.test(p));
+    });
+
+    // ── Helpers error ─────────────────────────────────────────
+    function showError(msg) { errorMsg.textContent = msg; errorMsg.classList.add('show'); }
+    function hideError()    { errorMsg.classList.remove('show'); }
+
+    // ── Submit ────────────────────────────────────────────────
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       hideError();
 
-      const user = document.getElementById('regUser').value.trim();
-      const email = document.getElementById('regEmail').value.trim();
-      const pass = passInput.value;
+      const name     = document.getElementById('regUser').value.trim();
+      const email    = document.getElementById('regEmail').value.trim();
+      const password = passInput.value;
 
-      if (!user) return showError("Ingresa un usuario");
-      if (!email) return showError("Ingresa un email");
-      if (pass.length < 8) return showError("La contraseña debe tener 8+ caracteres");
+      if (!name)              return showError('Ingresa tu nombre');
+      if (!email)             return showError('Ingresa un email');
+      if (password.length < 8) return showError('La contraseña debe tener al menos 8 caracteres');
 
       const btn = document.getElementById('submitBtn');
       btn.disabled = true;
       btn.classList.add('loading');
 
       try {
-        const res = await fetch("http://localhost:3000/api/auth/register", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name: user,
-            email,
-            password: pass
-          })
+        const res  = await fetch('/api/auth/register', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ name, email, password })
         });
-
         const data = await res.json();
 
-        btn.disabled = false;
-        btn.classList.remove('loading');
-
-        if (data.error) {
-          showError(data.error);
+        if (!res.ok || data.error) {
+          showError(data.error || 'Error al registrar');
         } else {
-          alert("Usuario creado correctamente 🚀");
-          window.location.href = "login.html";
+          // Redirige al login con mensaje de éxito
+          sessionStorage.setItem('register_success', '1');
+          window.location.href = 'login.html';
         }
-
-      } catch (err) {
+      } catch {
+        showError('Error de conexión con el servidor');
+      } finally {
         btn.disabled = false;
         btn.classList.remove('loading');
-        showError("Error de conexión con el servidor");
       }
     });
 
+    // ── Social placeholder ────────────────────────────────────
     function handleSocial(provider) {
-      alert("Registro con " + provider);
+      alert('Registro con ' + provider + ' — próximamente.');
     }
   </script>
 
